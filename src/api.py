@@ -29,7 +29,7 @@ templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # --- Load model ---
-local_llm_path = "/Users/kandarp/Downloads/Medical-RAG-using-Meditron-7B-LLM-main/meditron-7b.Q4_K_M.gguf"
+local_llm_path = "model/meditron-7b.Q4_K_M.gguf"
 
 llm = LlamaCpp(
     model_path=local_llm_path,

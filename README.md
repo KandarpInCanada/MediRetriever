@@ -1,2 +1,2 @@
-# MediRetriever
-MediRetriever: An AI oncology platform using RAG to retrieve and synthesize answers from peer-reviewed documents. Built on AWS, it delivers secure, scalable, real-time support for clinicians, researchers, and patients.
+# Medical RAG-using-Meditron-7B-LLM
+Medical RAG QA App using Meditron 7B LLM, Qdrant Vector Database, and PubMedBERT Embedding Model.

@@ -1,0 +1,10 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.x.x",
+    "@aws-sdk/client-textract": "^3.x.x",
+    "@aws-sdk/client-sagemaker-runtime": "^3.x.x", 
+    "@pinecone-database/pinecone": "^2.x.x",
+    "uuid": "^9.x.x"
+  }
+}

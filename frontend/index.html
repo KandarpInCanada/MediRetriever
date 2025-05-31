@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical RAG Assistant</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .status-online {
+            color: #28a745;
+        }
+
+        .status-offline {
+            color: #dc3545;
+        }
+
+        .status-loading {
+            color: #ffc107;
+        }
+
+        .query-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        .query-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .query-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .query-input:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .options-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .option-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option-group label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .option-group select,
+        .option-group input {
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .option-group select:focus,
+        .option-group input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .submit-btn .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        .submit-btn.loading .loading-spinner {
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .results-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .result-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .result-meta {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .result-content {
+            line-height: 1.7;
+            color: #444;
+            margin-bottom: 25px;
+        }
+
+        .sources-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .sources-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .source-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #4facfe;
+            transition: transform 0.2s ease;
+        }
+
+        .source-item:hover {
+            transform: translateX(5px);
+        }
+
+        .source-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .source-content {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px 20px;
+            border-radius: 10px;
+            border-left: 4px solid #dc3545;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .example-queries {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .example-queries h3 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .example-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .example-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .example-item:hover {
+            border-color: #4facfe;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.1);
+        }
+
+        .api-docs-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4facfe;
+            color: white;
+            padding: 15px;
+            border-radius: 50%;
+            text-decoration: none;
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .api-docs-link:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .options-row {
+                grid-template-columns: 1fr;
+            }
+
+            .status-bar {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-stethoscope"></i> Medical RAG Assistant</h1>
+            <p>AI-powered medical information retrieval with advanced search capabilities</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div class="status-item">
+                    <i class="fas fa-server" id="api-status-icon"></i>
+                    <span id="api-status-text">Checking API status...</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-database" id="db-status-icon"></i>
+                    <span id="db-status-text">Database: Unknown</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-clock"></i>
+                    <span id="last-updated">Last updated: Never</span>
+                </div>
+            </div>
+
+            <!-- Query Section -->
+            <div class="query-section">
+                <h2 style="margin-bottom: 20px; color: #333;">
+                    <i class="fas fa-search"></i> Ask a Medical Question
+                </h2>
+
+                <form class="query-form" id="queryForm">
+                    <div class="input-group">
+                        <label for="queryInput">Your Medical Question:</label>
+                        <textarea id="queryInput" class="query-input"
+                            placeholder="Ask about symptoms, treatments, medications, conditions, or any medical topic..."
+                            required></textarea>
+                    </div>
+
+                    <div class="options-row">
+                        <div class="option-group">
+                            <label for="maxResults">Number of Results:</label>
+                            <select id="maxResults">
+                                <option value="3">3 results</option>
+                                <option value="5" selected>5 results</option>
+                                <option value="10">10 results</option>
+                            </select>
+                        </div>
+
+                        <div class="option-group">
+                            <label for="temperature">Document Filter:</label>
+                            <input type="text" id="documentFilter" placeholder="Filter by document name (optional)">
+                        </div>
+
+                        <div class="option-group">
+                            <label for="maxTokens">Response Length:</label>
+                            <select id="maxTokens">
+                                <option value="500">Short (500 tokens)</option>
+                                <option value="1000" selected>Medium (1000 tokens)</option>
+                                <option value="2000">Long (2000 tokens)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        <div class="loading-spinner"></div>
+                        <i class="fas fa-paper-plane"></i> Get Medical Information
+                    </button>
+                </form>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection">
+                <div class="result-header">
+                    <div class="result-title">
+                        <i class="fas fa-file-medical-alt"></i> Medical Information
+                    </div>
+                    <div class="result-meta" id="resultMeta"></div>
+                </div>
+
+                <div class="result-content" id="resultContent"></div>
+
+                <div class="sources-section" id="sourcesSection">
+                    <div class="sources-title">
+                        <i class="fas fa-book-medical"></i> Sources & References
+                    </div>
+                    <div id="sourcesList"></div>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div class="error-message" id="errorMessage">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span id="errorText"></span>
+            </div>
+
+            <!-- Example Queries -->
+            <div class="example-queries">
+                <h3><i class="fas fa-lightbulb"></i> Example Questions</h3>
+                <div class="example-list">
+                    <div class="example-item" onclick="setQuery('What are the symptoms of diabetes type 2?')">
+                        What are the symptoms of diabetes type 2?
+                    </div>
+                    <div class="example-item" onclick="setQuery('How does high blood pressure affect the heart?')">
+                        How does high blood pressure affect the heart?
+                    </div>
+                    <div class="example-item" onclick="setQuery('What are the side effects of aspirin?')">
+                        What are the side effects of aspirin?
+                    </div>
+                    <div class="example-item"
+                        onclick="setQuery('Explain the difference between viral and bacterial infections')">
+                        Explain the difference between viral and bacterial infections
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Documentation Link -->
+    <a href="http://localhost:8000/docs" target="_blank" class="api-docs-link" title="API Documentation">
+        <i class="fas fa-code"></i>
+    </a>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:8000';
+
+        // DOM Elements
+        const queryForm = document.getElementById('queryForm');
+        const queryInput = document.getElementById('queryInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultContent = document.getElementById('resultContent');
+        const resultMeta = document.getElementById('resultMeta');
+        const sourcesSection = document.getElementById('sourcesSection');
+        const sourcesList = document.getElementById('sourcesList');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+
+        // Status elements
+        const apiStatusIcon = document.getElementById('api-status-icon');
+        const apiStatusText = document.getElementById('api-status-text');
+        const dbStatusIcon = document.getElementById('db-status-icon');
+        const dbStatusText = document.getElementById('db-status-text');
+        const lastUpdated = document.getElementById('last-updated');
+
+        // Check API status on load
+        window.addEventListener('load', checkAPIStatus);
+
+        // Form submission handler
+        queryForm.addEventListener('submit', handleSubmit);
+
+        async function checkAPIStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateStatus('api', 'online', 'API: Online');
+                    updateStatus('db', 'online', `Database: ${data.database || 'Connected'}`);
+                } else {
+                    throw new Error('API not responding');
+                }
+            } catch (error) {
+                updateStatus('api', 'offline', 'API: Offline');
+                updateStatus('db', 'offline', 'Database: Disconnected');
+            }
+
+            updateLastUpdated();
+        }
+
+        function updateStatus(type, status, text) {
+            const icon = type === 'api' ? apiStatusIcon : dbStatusIcon;
+            const textEl = type === 'api' ? apiStatusText : dbStatusText;
+
+            icon.className = `fas ${status === 'online' ? 'fa-check-circle status-online' : 'fa-times-circle status-offline'}`;
+            textEl.textContent = text;
+            textEl.className = `status-${status}`;
+        }
+
+        function updateLastUpdated() {
+            const now = new Date();
+            lastUpdated.textContent = `Last updated: ${now.toLocaleTimeString()}`;
+        }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+
+            const query = queryInput.value.trim();
+            if (!query) return;
+
+            hideError();
+            hideResults();
+            setLoading(true);
+
+            try {
+                const requestData = {
+                    question: query,
+                    top_k: parseInt(document.getElementById('maxResults').value),
+                    document_filter: document.getElementById('documentFilter').value.trim() || null,
+                    max_length: parseInt(document.getElementById('maxTokens').value)
+                };
+
+                const response = await fetch(`${API_BASE_URL}/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || `HTTP error! status: ${response.status}`);
+                }
+
+                displayResults(data, query);
+
+            } catch (error) {
+                console.error('Query error:', error);
+                showError(`Failed to get medical information: ${error.message}`);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function displayResults(data, originalQuery) {
+            // Update meta information
+            const timestamp = new Date().toLocaleTimeString();
+            resultMeta.textContent = `Generated at ${timestamp} | Query: "${originalQuery}" | Confidence: ${(data.confidence * 100).toFixed(1)}%`;
+
+            // Display main response
+            resultContent.innerHTML = formatResponse(data.answer);
+
+            // Display sources if available
+            if (data.sources && data.sources.length > 0) {
+                sourcesSection.style.display = 'block';
+                sourcesList.innerHTML = data.sources.map((source, index) => `
+                    <div class="source-item">
+                        <div class="source-title">Source ${index + 1} ${source.document_name ? `- ${source.document_name}` : ''}</div>
+                        <div class="source-content">${escapeHtml(source.content || source.text || 'No content available')}</div>
+                        ${source.score ? `<div style="font-size: 0.8rem; color: #999; margin-top: 5px;">Relevance: ${(source.score * 100).toFixed(1)}%</div>` : ''}
+                    </div>
+                `).join('');
+            } else {
+                sourcesSection.style.display = 'none';
+            }
+
+            showResults();
+        }
+
+        function formatResponse(text) {
+            // Basic formatting for better readability
+            return text
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>')
+                .replace(/^\s*/, '<p>')
+                .replace(/\s*$/, '</p>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace ( /\* (.*?) \* /g, '<em>$1</em > ');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function setLoading(loading) {
+            if (loading) {
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<div class="loading-spinner"></div>Processing your query...';
+            } else {
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Get Medical Information';
+            }
+        }
+
+        function showResults() {
+            resultsSection.classList.add('show');
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function hideResults() {
+            resultsSection.classList.remove('show');
+        }
+
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.add('show');
+        }
+
+        function hideError() {
+            errorMessage.classList.remove('show');
+        }
+
+        function setQuery(query) {
+            queryInput.value = query;
+            queryInput.focus();
+        }
+
+        // Auto-resize textarea
+        queryInput.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = Math.max(120, this.scrollHeight) + 'px';
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function (e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                queryForm.dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // Periodic status check
+        setInterval(checkAPIStatus, 30000); // Check every 30 seconds
+    </script>
+</body>
+
+</html>

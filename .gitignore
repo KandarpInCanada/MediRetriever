@@ -2,3 +2,12 @@
 meditron-7b.Q4_K_M.gguf
 *.pyc
 .DS_Store
+.env
+*.hcl
+/.terraform
+backend/.env.template
+/backend/venv
+/frontend/.next
+/frontend/node_modules
+terraform/terraform.tfvars
+terraform/modules/lambda-pdf-embedding/lambda/lambda_deployment_package.zip

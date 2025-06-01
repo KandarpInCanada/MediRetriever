@@ -11,3 +11,4 @@ backend/.env.template
 /frontend/node_modules
 terraform/terraform.tfvars
 terraform/modules/lambda-pdf-embedding/lambda/lambda_deployment_package.zip
+/frontend-terraform/.terraform

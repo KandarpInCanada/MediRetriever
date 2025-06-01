@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e  # Exit on any error
 # Configuration
-IMAGE_NAME="oncology-app"
+IMAGE_NAME="oncology-frontend-app"
 DOCKER_HUB_USERNAME="kandarpincanada"  # Replace with your Docker Hub username
 TAG="latest"
 PLATFORMS="linux/amd64,linux/arm64"  # Multi-platform support

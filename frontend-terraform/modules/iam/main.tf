@@ -43,7 +43,7 @@ resource "aws_iam_policy" "cloudwatch_logs_policy" {
   tags = var.tags
 }
 
-# IAM Policy for Systems Manager (for easier instance management)
+# IAM Policy for Systems Manager
 resource "aws_iam_policy" "ssm_policy" {
   name        = "${var.name_prefix}-ssm-policy"
   description = "Policy for Systems Manager access"
@@ -73,7 +73,7 @@ resource "aws_iam_policy" "ssm_policy" {
   tags = var.tags
 }
 
-# IAM Policy for ECR (Docker registry access)
+# IAM Policy for ECR
 resource "aws_iam_policy" "ecr_policy" {
   name        = "${var.name_prefix}-ecr-policy"
   description = "Policy for ECR access"
@@ -97,6 +97,30 @@ resource "aws_iam_policy" "ecr_policy" {
   tags = var.tags
 }
 
+# IAM Policy for SageMaker access
+resource "aws_iam_policy" "sagemaker_policy" {
+  name        = "${var.name_prefix}-sagemaker-policy"
+  description = "Policy for SageMaker access"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sagemaker:InvokeEndpoint",
+          "sagemaker:DescribeEndpoint",
+          "sagemaker:DescribeEndpointConfig",
+          "sagemaker:ListEndpoints"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+
+  tags = var.tags
+}
+
 # Attach policies to the role
 resource "aws_iam_role_policy_attachment" "cloudwatch_logs_attachment" {
   role       = aws_iam_role.ec2_role.name
@@ -111,6 +135,11 @@ resource "aws_iam_role_policy_attachment" "ssm_attachment" {
 resource "aws_iam_role_policy_attachment" "ecr_attachment" {
   role       = aws_iam_role.ec2_role.name
   policy_arn = aws_iam_policy.ecr_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "sagemaker_attachment" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = aws_iam_policy.sagemaker_policy.arn
 }
 
 # Attach AWS managed policy for CloudWatch Agent

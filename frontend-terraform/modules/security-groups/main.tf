@@ -1,8 +1,8 @@
-# Security Group for Web Server
+# Security Group for Web Server (Frontend)
 resource "aws_security_group" "web" {
   name_prefix = "${var.name_prefix}-web-"
   vpc_id      = var.vpc_id
-  description = "Security group for web server"
+  description = "Security group for frontend web server"
 
   # HTTP access
   ingress {
@@ -31,13 +31,13 @@ resource "aws_security_group" "web" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # SSH access (restrict this to your IP in production)
+  # SSH access
   ingress {
     description = "SSH"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Change this to your IP for better security
+    cidr_blocks = ["0.0.0.0/0"] # Restrict to your IP in production
   }
 
   # All outbound traffic
@@ -58,7 +58,49 @@ resource "aws_security_group" "web" {
   }
 }
 
-# Security Group for ALB (if needed in future)
+# Security Group for Backend Server
+resource "aws_security_group" "backend" {
+  name_prefix = "${var.name_prefix}-backend-"
+  vpc_id      = var.vpc_id
+  description = "Security group for backend server"
+
+  # API port - only from frontend
+  ingress {
+    description     = "Backend API"
+    from_port       = 8000
+    to_port         = 8000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.web.id]
+  }
+
+  # SSH access - only from frontend
+  ingress {
+    description     = "SSH"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.web.id]
+  }
+
+  # All outbound traffic
+  egress {
+    description = "All outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.name_prefix}-backend-sg"
+  })
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Security Group for ALB (Application Load Balancer)
 resource "aws_security_group" "alb" {
   name_prefix = "${var.name_prefix}-alb-"
   vpc_id      = var.vpc_id

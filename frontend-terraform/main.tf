@@ -55,9 +55,9 @@ module "cloudwatch" {
   tags        = local.common_tags
 }
 
-# EC2 Module
-module "ec2" {
-  source                = "./modules/ec2"
+# Frontend EC2 Module
+module "frontend_ec2" {
+  source                = "./modules/frontend-ec2"
   name_prefix           = local.name_prefix
   vpc_id                = module.vpc.vpc_id
   public_subnet_ids     = module.vpc.public_subnet_ids
@@ -66,7 +66,28 @@ module "ec2" {
   key_name              = var.key_name
   instance_type         = var.instance_type
   docker_image          = var.docker_image
-  backend_api_url       = var.backend_api_url
+  backend_api_url       = "http://${module.backend_ec2.private_ip}:8000"
   cloudwatch_log_group  = module.cloudwatch.log_group_name
   tags                  = local.common_tags
+}
+
+# Backend EC2 Module
+module "backend_ec2" {
+  source                       = "./modules/backend-ec2"
+  name_prefix                  = local.name_prefix
+  vpc_id                       = module.vpc.vpc_id
+  private_subnet_id            = module.vpc.private_subnet_ids[0]
+  security_group_ids           = [module.security_groups.backend_security_group_id]
+  instance_profile_name        = module.iam.ec2_instance_profile_name
+  key_name                     = var.key_name
+  instance_type                = var.backend_instance_type
+  docker_image                 = var.backend_docker_image
+  sagemaker_llm_endpoint       = var.sagemaker_llm_endpoint
+  sagemaker_embedding_endpoint = var.sagemaker_embedding_endpoint
+  aws_access_key_id            = var.aws_access_key_id
+  aws_secret_access_key        = var.aws_secret_access_key
+  pinecone_api_key             = var.pinecone_api_key
+  pinecone_index_name          = var.pinecone_index_name
+  cloudwatch_log_group         = module.cloudwatch.backend_log_group_name
+  tags                         = local.common_tags
 }

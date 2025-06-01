@@ -14,18 +14,19 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
-# User data script for EC2 instance
+# User data script for Frontend EC2 instance
 locals {
   user_data = base64encode(templatefile("${path.module}/user-data.sh", {
     docker_image         = var.docker_image
     backend_api_url      = var.backend_api_url
     cloudwatch_log_group = var.cloudwatch_log_group
     aws_region           = data.aws_region.current.name
+    name_prefix          = var.name_prefix
   }))
 }
 
-# EC2 Instance
-resource "aws_instance" "web" {
+# Frontend EC2 Instance
+resource "aws_instance" "frontend" {
   ami                    = data.aws_ami.amazon_linux.id
   instance_type          = var.instance_type
   key_name               = var.key_name
@@ -43,7 +44,8 @@ resource "aws_instance" "web" {
   }
 
   tags = merge(var.tags, {
-    Name = "${var.name_prefix}-web-server"
+    Name = "${var.name_prefix}-frontend-server"
+    Type = "Frontend"
   })
 
   lifecycle {
@@ -51,16 +53,16 @@ resource "aws_instance" "web" {
   }
 }
 
-# Elastic IP for the instance
-resource "aws_eip" "web" {
-  instance = aws_instance.web.id
+# Elastic IP for the Frontend instance
+resource "aws_eip" "frontend" {
+  instance = aws_instance.frontend.id
   domain   = "vpc"
 
   tags = merge(var.tags, {
-    Name = "${var.name_prefix}-web-eip"
+    Name = "${var.name_prefix}-frontend-eip"
   })
 
-  depends_on = [aws_instance.web]
+  depends_on = [aws_instance.frontend]
 }
 
 # Data source for current AWS region

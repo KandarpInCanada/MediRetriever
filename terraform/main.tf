@@ -2,23 +2,23 @@ provider "aws" {
   region = var.aws_region
 }
 
-module "sagemaker_llm" {
-  source            = "./modules/llm_sagemaker"
-  huggingface_token = "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"
-  model_id          = "epfl-llm/meditron-7b"
-  instance_type     = "ml.g5.2xlarge"
-  role_name         = "sagemaker_execution_role"
-}
-
-# module "lambda_pdf_embedding" {
-#   source                  = "./modules/lambda-pdf-embedding"
-#   aws_region              = var.aws_region
-#   s3_bucket_name          = "pdf-embedding-bucket"
-#   pinecone_api_key        = var.pinecone_api_key
-#   pinecone_index          = var.pinecone_index_name
-#   sagemaker_endpoint_name = module.sagemaker_embedding.pubmedbert_endpoint_name
-#   sagemaker_endpoint_arn  = module.sagemaker_embedding.pubmedbert__role_arn
+# module "sagemaker_llm" {
+#   source            = "./modules/llm_sagemaker"
+#   huggingface_token = "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"
+#   model_id          = "epfl-llm/meditron-7b"
+#   instance_type     = "ml.g5.2xlarge"
+#   role_name         = "sagemaker_execution_role"
 # }
+
+module "lambda_pdf_embedding" {
+  source                  = "./modules/lambda-pdf-embedding"
+  aws_region              = var.aws_region
+  s3_bucket_name          = "pdf-embedding-bucket"
+  pinecone_api_key        = var.pinecone_api_key
+  pinecone_index          = var.pinecone_index_name
+  sagemaker_endpoint_name = "tei-2025-06-01-05-50-55-735"
+  sagemaker_endpoint_arn  = "tei-2025-06-01-05-50-55-735"
+}
 
 # module "ec2_oncology_app" {
 #   source        = "./modules/ec2-oncology-app"

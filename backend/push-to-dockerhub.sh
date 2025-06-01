@@ -3,7 +3,7 @@
 set -e  # Exit on any error
 
 # Configuration
-IMAGE_NAME="backend-api"
+IMAGE_NAME="oncology-backend-api"
 DOCKER_HUB_USERNAME="kandarpincanada"
 TAG="latest"
 PLATFORMS="linux/amd64,linux/arm64"

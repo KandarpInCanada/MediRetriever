@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { QueryForm } from "@/components/query-form";
 import { ResponseDisplay } from "@/components/response-display";
 import { Header } from "@/components/header";
@@ -23,9 +23,22 @@ export function OncologyQAInterface() {
   const [responseData, setResponseData] = useState<QueryResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [apiBaseUrl, setApiBaseUrl] = useState("http://localhost:8000");
 
-  const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  // Fetch dynamic config at runtime
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const res = await fetch("/api/config");
+        const data = await res.json();
+        setApiBaseUrl(data.apiUrl || "http://localhost:8000");
+      } catch (err) {
+        console.error("Failed to load runtime config:", err);
+      }
+    };
+
+    fetchConfig();
+  }, []);
 
   const handleSubmitQuery = async (
     query: string,
@@ -48,7 +61,7 @@ export function OncologyQAInterface() {
     const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
     try {
-      const response = await fetch(`${API_BASE_URL}/query`, {
+      const response = await fetch(`${apiBaseUrl}/query`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

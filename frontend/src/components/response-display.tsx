@@ -28,30 +28,6 @@ export function ResponseDisplay({ responseData }: ResponseDisplayProps) {
           {answer || "No answer provided"}
         </p>
       </div>
-
-      {/* Supporting Context Section */}
-      <div className="bg-white border border-teal-200 rounded-xl p-6 shadow-md">
-        <div className="flex items-center text-teal-700 font-semibold text-lg mb-3">
-          <span className="mr-2">📄</span> Research Context
-        </div>
-        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 max-h-[200px] overflow-y-auto">
-          <pre className="text-slate-700 whitespace-pre-wrap font-mono text-sm">
-            {source_document || "No context provided"}
-          </pre>
-        </div>
-      </div>
-
-      {/* Source Document Section */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-md">
-        <div className="flex items-center text-purple-700 font-semibold text-lg mb-3">
-          <span className="mr-2">🔬</span> Source Publication
-        </div>
-        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 max-h-[300px] overflow-y-auto">
-          <pre className="text-slate-700 whitespace-pre-wrap font-mono text-sm">
-            {doc || "No source provided"}
-          </pre>
-        </div>
-      </div>
     </div>
   );
 }
